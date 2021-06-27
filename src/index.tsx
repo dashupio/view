@@ -74,7 +74,7 @@ const DashupUIView = (props = {}) => {
               }
       
               // set code
-              const actualView = shimGlobal[uuid] && shimGlobal[uuid].default || shimGlobal[uuid];
+              const actualView = shimGlobal[uuid]?.default || shimGlobal[uuid];
       
               // set to cache
               dotProp.set(viewCache, item, actualView);
