@@ -202,7 +202,9 @@ var dotProp = {
 
 var viewCache = {};
 var loadCache = {};
-var requCache = {}; // create menu component
+var requCache = {
+  react: React
+}; // create menu component
 
 var DashupUIView = function DashupUIView() {
   var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
