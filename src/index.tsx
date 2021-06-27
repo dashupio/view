@@ -1,37 +1,13 @@
 
 // import dependencies
-import moment from 'moment';
 import dotProp from 'dot-prop';
-import prettyMs from 'pretty-ms';
-import reactDOM from 'react-dom';
-import dashupUI from '@dashup/ui';
-import handlebars from 'handlebars';
-import ReactSelect from 'react-select';
-import ReactSortable from 'react-sortablejs';
-import ReactBootstrap from 'react-bootstrap';
-import ReactSelectAsync from 'react-select/async';
-import HandlebarsHelpers from 'handlebars-helpers';
-import ReactPerfectScrollbar from 'react-perfect-scrollbar';
 import React, { useState, useEffect } from 'react';
 
 
 // view cache
 const viewCache = {};
 const loadCache = {};
-const requCache = {
-  react : React,
-  moment,
-  handlebars,
-  'pretty-ms'               : prettyMs,
-  'react-dom'               : reactDOM,
-  '@dashup/ui'              : dashupUI,
-  'react-select'            : ReactSelect,
-  'react-bootstrap'         : ReactBootstrap,
-  'react-sortablejs'        : ReactSortable,
-  'react-select/async'      : ReactSelectAsync,
-  'handlebars-helpers'      : HandlebarsHelpers,
-  'react-perfect-scrollbar' : ReactPerfectScrollbar,
-};
+const requCache = {};
 
 // create menu component
 const DashupUIView = (props = {}) => {
@@ -128,6 +104,14 @@ const DashupUIView = (props = {}) => {
     // error
     console.error(`[dashup] view ${type}:${struct} ${view}`, e);
   }
+};
+
+// set defaults
+DashupUIView.setDefaults = (def) => {
+  // loop
+  Object.keys(def).map((key) => {
+    requCache[key] = def[key];
+  });
 };
 
 // export default
