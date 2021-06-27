@@ -7,7 +7,9 @@ import React, { useState, useEffect } from 'react';
 // view cache
 const viewCache = {};
 const loadCache = {};
-const requCache = {};
+const requCache = {
+  react : React,
+};
 
 // create menu component
 const DashupUIView = (props = {}) => {
