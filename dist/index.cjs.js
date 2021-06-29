@@ -256,8 +256,6 @@ var DashupUIView = function DashupUIView() {
 
 
             try {
-              var _shimGlobal$uuid;
-
               // expand data
               var _data = _slicedToArray(data, 1),
                   _data$ = _data[0],
@@ -284,11 +282,11 @@ var DashupUIView = function DashupUIView() {
               } // set code
 
 
-              var actualView = ((_shimGlobal$uuid = shimGlobal[uuid]) === null || _shimGlobal$uuid === void 0 ? void 0 : _shimGlobal$uuid["default"]) || shimGlobal[uuid]; // set to cache
+              var actualView = shimGlobal[uuid]; // set to cache
 
-              dotProp.set(viewCache, item, actualView); // finish loading
+              dotProp.set(viewCache, item, (actualView === null || actualView === void 0 ? void 0 : actualView["default"]) || actualView); // finish loading
 
-              resolve(actualView);
+              resolve((actualView === null || actualView === void 0 ? void 0 : actualView["default"]) || actualView);
               setLoading(false);
             } catch (e) {
               // error

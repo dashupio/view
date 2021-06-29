@@ -3,7 +3,6 @@
 import dotProp from 'dot-prop';
 import React, { useState, useEffect } from 'react';
 
-
 // view cache
 const viewCache = {};
 const loadCache = {};
@@ -74,13 +73,13 @@ const DashupUIView = (props = {}) => {
               }
       
               // set code
-              const actualView = shimGlobal[uuid]?.default || shimGlobal[uuid];
+              const actualView = shimGlobal[uuid];
       
               // set to cache
-              dotProp.set(viewCache, item, actualView);
+              dotProp.set(viewCache, item, actualView?.default || actualView);
       
               // finish loading
-              resolve(actualView);
+              resolve(actualView?.default || actualView);
               setLoading(false);
             } catch (e) {
               // error
