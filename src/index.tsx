@@ -1,6 +1,7 @@
 
 // import dependencies
 import dotProp from 'dot-prop';
+import { ErrorBoundary } from 'react-error-boundary';
 import React, { useState, useEffect } from 'react';
 
 // view cache
@@ -17,6 +18,7 @@ const DashupUIView = (props = {}) => {
 
   // set loading
   const [loading, setLoading] = useState(!(!view || !type || !struct || !dashup));
+  const [hasError, setHasError] = useState(false);
   
   // tld
   const item = `${type}.${struct}.${view}`.split('/').join('-');
@@ -96,11 +98,29 @@ const DashupUIView = (props = {}) => {
 
   // on load
   if (Component && !loading && props.onLoad) setTimeout(props.onLoad, 100);
+
+  // error fallback
+  const ErrorFallback = ({ error, resetErrorBoundary }) => {
+    // log error
+    console.error(`[dashup] view ${type}:${struct} ${view}`, error);
+
+    // return ! div
+    return <div />;
+  };
       
   // create new function
   try {
     // return JSX
-    return Component ? <Component { ...props } /> : (props.children || <div></div>);
+    return Component ? (
+      <ErrorBoundary
+        FallbackComponent={ ErrorFallback }
+        onReset={ () => {
+          // reset the state of your app so the error doesn't happen again
+        } }
+      >
+        <Component { ...props } />
+      </ErrorBoundary>
+    ) : (props.children || <div></div>);
   } catch (e) {
     // error
     console.error(`[dashup] view ${type}:${struct} ${view}`, e);

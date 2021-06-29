@@ -1,5 +1,6 @@
 'use strict';
 
+var reactErrorBoundary = require('react-error-boundary');
 var React = require('react');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
@@ -223,7 +224,12 @@ var DashupUIView = function DashupUIView() {
   var _useState = React.useState(!(!view || !type || !struct || !dashup)),
       _useState2 = _slicedToArray(_useState, 2),
       loading = _useState2[0],
-      setLoading = _useState2[1]; // tld
+      setLoading = _useState2[1];
+
+  var _useState3 = React.useState(false),
+      _useState4 = _slicedToArray(_useState3, 2);
+      _useState4[0];
+      _useState4[1]; // tld
 
 
   var item = "".concat(type, ".").concat(struct, ".").concat(view).split('/').join('-'); // check has view
@@ -300,11 +306,25 @@ var DashupUIView = function DashupUIView() {
 
   var Component = dotProp.get(viewCache, item); // on load
 
-  if (Component && !loading && props.onLoad) setTimeout(props.onLoad, 100); // create new function
+  if (Component && !loading && props.onLoad) setTimeout(props.onLoad, 100); // error fallback
+
+  var ErrorFallback = function ErrorFallback(_ref) {
+    var error = _ref.error;
+        _ref.resetErrorBoundary;
+    // log error
+    console.error("[dashup] view ".concat(type, ":").concat(struct, " ").concat(view), error); // return ! div
+
+    return /*#__PURE__*/React__default['default'].createElement("div", null);
+  }; // create new function
+
 
   try {
     // return JSX
-    return Component ? /*#__PURE__*/React__default['default'].createElement(Component, props) : props.children || /*#__PURE__*/React__default['default'].createElement("div", null);
+    return Component ? /*#__PURE__*/React__default['default'].createElement(reactErrorBoundary.ErrorBoundary, {
+      FallbackComponent: ErrorFallback,
+      onReset: function onReset() {// reset the state of your app so the error doesn't happen again
+      }
+    }, /*#__PURE__*/React__default['default'].createElement(Component, props)) : props.children || /*#__PURE__*/React__default['default'].createElement("div", null);
   } catch (e) {
     // error
     console.error("[dashup] view ".concat(type, ":").concat(struct, " ").concat(view), e);
