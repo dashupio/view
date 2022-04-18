@@ -1,5 +1,42 @@
+import { EventEmitter } from 'events';
 import { ErrorBoundary } from 'react-error-boundary';
 import React, { useState, useEffect } from 'react';
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+  try {
+    var info = gen[key](arg);
+    var value = info.value;
+  } catch (error) {
+    reject(error);
+    return;
+  }
+
+  if (info.done) {
+    resolve(value);
+  } else {
+    Promise.resolve(value).then(_next, _throw);
+  }
+}
+
+function _asyncToGenerator(fn) {
+  return function () {
+    var self = this,
+        args = arguments;
+    return new Promise(function (resolve, reject) {
+      var gen = fn.apply(self, args);
+
+      function _next(value) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+      }
+
+      function _throw(err) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+      }
+
+      _next(undefined);
+    });
+  };
+}
 
 function _slicedToArray(arr, i) {
   return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
@@ -205,7 +242,8 @@ var viewCache = {};
 var loadCache = {};
 var requCache = {
   react: React
-}; // create menu component
+};
+var viewEvents = new EventEmitter(); // create menu component
 
 var DashupUIView = function DashupUIView() {
   var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -213,20 +251,144 @@ var DashupUIView = function DashupUIView() {
   var type = props.type,
       view = props.view,
       struct = props.struct,
-      dashup = props.dashup; // set loading
+      dashup = props.dashup; // tld
 
-  var _useState = useState(!(!view || !type || !struct || !dashup)),
-      _useState2 = _slicedToArray(_useState, 2),
-      loading = _useState2[0],
-      setLoading = _useState2[1];
+  var item = "".concat(type, ".").concat(struct, ".").concat(view).split('/').join('-'); // set loading
 
-  var _useState3 = useState(false),
-      _useState4 = _slicedToArray(_useState3, 2);
-      _useState4[0];
-      _useState4[1]; // tld
+  var _useState = useState(!!dotProp.get(viewCache, item)),
+      _useState2 = _slicedToArray(_useState, 2);
+      _useState2[0];
+      var setLoaded = _useState2[1];
+
+  var _useState3 = useState(!(!view || !type || !struct || !dashup)),
+      _useState4 = _slicedToArray(_useState3, 2),
+      loading = _useState4[0],
+      setLoading = _useState4[1]; // load view
 
 
-  var item = "".concat(type, ".").concat(struct, ".").concat(view).split('/').join('-'); // check has view
+  var loadView = function loadView() {
+    var attempt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+
+    // reattempt
+    var reAttempt = function reAttempt() {
+      // reattempt
+      if (attempt < 5) {
+        // create load cache item
+        setTimeout(function () {
+          // set
+          dotProp.set(loadCache, item, loadView(attempt + 1)); // set events
+
+          viewEvents.emit(item, true);
+        }, attempt * 2000);
+      }
+    }; // return new promise
+
+
+    return new Promise( /*#__PURE__*/function () {
+      var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(resolve, reject) {
+        var finished, dataPromise, timeoutPromise, data, _data, _data$, code, uuid, shimGlobal, actualView;
+
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                // finished
+                finished = false; // data promise
+
+                dataPromise = props.dashup.rpc({
+                  type: type,
+                  struct: struct
+                }, 'views', [view]); // timeout promise
+
+                timeoutPromise = setTimeout(function () {
+                  // timeout
+                  finished = true; // reject
+
+                  reject();
+                  reAttempt();
+                }, 5000); // try/catch
+
+                _context.prev = 3;
+                _context.next = 6;
+                return dataPromise;
+
+              case 6:
+                data = _context.sent;
+
+                if (!finished) {
+                  _context.next = 9;
+                  break;
+                }
+
+                return _context.abrupt("return");
+
+              case 9:
+                finished = true;
+                clearTimeout(timeoutPromise); // check not found
+
+                if (!(!data || !data[0])) {
+                  _context.next = 15;
+                  break;
+                }
+
+                // resolve
+                resolve(null);
+                reAttempt(); // log return
+
+                return _context.abrupt("return", console.log("[dashup] view ".concat(type, ":").concat(struct, " ").concat(view, " not found")));
+
+              case 15:
+                // expand data
+                _data = _slicedToArray(data, 1), _data$ = _data[0], code = _data$.code, uuid = _data$.uuid; // create global
+
+                shimGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : null; // check window
+
+                if (!shimGlobal.shimRequire) {
+                  // create shim require function
+                  shimGlobal.shimRequire = function (name) {
+                    // names
+                    if (requCache[name]) return requCache[name];
+                  };
+                } // create new function
+
+
+                try {
+                  // try/catch
+                  new Function("const fileName = '".concat(type, ":").concat(struct, "'; const ", 'req', 'uire', " = ").concat(typeof window === 'undefined' ? 'global' : 'window', ".shimRequire; ").concat(code))();
+                } catch (e) {
+                  console.error("[dashup] view ".concat(type, ":").concat(struct, " ").concat(view), e);
+                } // set code
+
+
+                actualView = shimGlobal[uuid]; // set to cache
+
+                dotProp.set(viewCache, item, (actualView === null || actualView === void 0 ? void 0 : actualView["default"]) || actualView);
+                setLoaded(true); // finish loading
+
+                resolve((actualView === null || actualView === void 0 ? void 0 : actualView["default"]) || actualView);
+                _context.next = 29;
+                break;
+
+              case 25:
+                _context.prev = 25;
+                _context.t0 = _context["catch"](3);
+                reject(_context.t0);
+                reAttempt();
+
+              case 29:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee, null, [[3, 25]]);
+      }));
+
+      return function (_x, _x2) {
+        return _ref.apply(this, arguments);
+      };
+    }());
+  }; // check has view
+
 
   useEffect(function () {
     // use effect
@@ -238,62 +400,25 @@ var DashupUIView = function DashupUIView() {
         // await loaded from another module
         dotProp.get(loadCache, item).then(function () {
           return setLoading(false);
-        });
+        }); // retry loader
+
+        var retryLoader = function retryLoader() {
+          // await loaded from another module
+          dotProp.get(loadCache, item).then(function () {
+            return setLoading(false);
+          });
+        }; // add listener
+
+
+        viewEvents.on(item, retryLoader); // return
+
+        return function () {
+          // off
+          viewEvents.removeListener(item, retryLoader);
+        };
       } else {
         // create load cache item
-        dotProp.set(loadCache, item, new Promise(function (resolve) {
-          // load
-          props.dashup.rpc({
-            type: type,
-            struct: struct
-          }, 'views', [view]).then(function (data) {
-            // check not found
-            if (!data || !data[0]) {
-              resolve(null);
-              setLoading(false);
-              return console.log("[dashup] view ".concat(type, ":").concat(struct, " ").concat(view, " not found"));
-            } // try/catch
-
-
-            try {
-              // expand data
-              var _data = _slicedToArray(data, 1),
-                  _data$ = _data[0],
-                  code = _data$.code,
-                  uuid = _data$.uuid; // create global
-
-
-              var shimGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : null; // check window
-
-              if (!shimGlobal.shimRequire) {
-                // create shim require function
-                shimGlobal.shimRequire = function (name) {
-                  // names
-                  if (requCache[name]) return requCache[name];
-                };
-              } // create new function
-
-
-              try {
-                // try/catch
-                new Function("const require = ".concat(typeof window === 'undefined' ? 'global' : 'window', ".shimRequire; ").concat(code))();
-              } catch (e) {
-                console.error("[dashup] view ".concat(type, ":").concat(struct, " ").concat(view), e);
-              } // set code
-
-
-              var actualView = shimGlobal[uuid]; // set to cache
-
-              dotProp.set(viewCache, item, (actualView === null || actualView === void 0 ? void 0 : actualView["default"]) || actualView); // finish loading
-
-              resolve((actualView === null || actualView === void 0 ? void 0 : actualView["default"]) || actualView);
-              setLoading(false);
-            } catch (e) {
-              // error
-              console.error("[dashup] view ".concat(type, ":").concat(struct, " ").concat(view), e);
-            }
-          });
-        }));
+        dotProp.set(loadCache, item, loadView());
       }
     }
   }, [struct, type, view]); // get component
@@ -302,9 +427,9 @@ var DashupUIView = function DashupUIView() {
 
   if (Component && !loading && props.onLoad) setTimeout(props.onLoad, 100); // error fallback
 
-  var ErrorFallback = function ErrorFallback(_ref) {
-    var error = _ref.error;
-        _ref.resetErrorBoundary;
+  var ErrorFallback = function ErrorFallback(_ref2) {
+    var error = _ref2.error;
+        _ref2.resetErrorBoundary;
     // log error
     console.error("[dashup] view ".concat(type, ":").concat(struct, " ").concat(view), error); // return ! div
 
